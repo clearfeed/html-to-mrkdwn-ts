@@ -22,7 +22,7 @@ const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
 }
 
 const htmlToMrkdwn = (html: string, options: Partial<NodeHtmlMarkdownOptions> = {}) => {
-  const result = NodeHtmlMarkdown.translate(html, { ...baseOptions, ...options }, translators)
+  const result = NodeHtmlMarkdown.translate(html, Object.assign(baseOptions, options), translators)
   return {
     text: result,
     image: findFirstImageSrc(html)
