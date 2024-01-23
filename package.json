@@ -1,5 +1,5 @@
 {
-  "name": "html-to-mrkdwn-ts",
+  "name": "@clearfeed-ai/html-to-mrkdwn-ts",
   "description": "Fast HTML to Slack flavored mrkdwn",
   "version": "1.1.1",
   "main": "lib/index.js",
@@ -7,12 +7,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oferitz/html-to-mrkdwn-ts.git"
+    "url": "git+https://github.com/clearfeed/html-to-mrkdwn-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/oferitz/html-to-mrkdwn-ts/issues"
+    "url": "https://github.com/clearfeed/html-to-mrkdwn-ts/issues"
   },
-  "homepage": "https://github.com/oferitz/html-to-mrkdwn-ts#readme",
+  "homepage": "https://github.com/clearfeed/html-to-mrkdwn-ts#readme",
   "engines": {
     "node": ">=14.0.0"
   },
@@ -27,7 +27,7 @@
     "slack",
     "mrkdwn"
   ],
-  "author": "Ofer Itzhaki",
+  "author": "ClearFeed",
   "scripts": {
     "run": "ts-node ./src/index.ts",
     "build": "tsc",
