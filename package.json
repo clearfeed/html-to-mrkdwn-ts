@@ -1,7 +1,7 @@
 {
   "name": "@clearfeed-ai/html-to-mrkdwn-ts",
   "description": "Fast HTML to Slack flavored mrkdwn",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "license": "MIT",
