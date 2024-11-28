@@ -60,6 +60,9 @@ const translators: TranslatorConfigObject = {
         }
       }
     }
+  },
+  'p': {
+    surroundingNewlines: 1
   }
 }
 
