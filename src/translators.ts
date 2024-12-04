@@ -63,6 +63,9 @@ const translators: TranslatorConfigObject = {
   },
   'p': {
     surroundingNewlines: 1
+  },
+  'div': {
+    surroundingNewlines: 1
   }
 }
 
