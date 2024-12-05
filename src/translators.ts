@@ -1,4 +1,4 @@
-import { PostProcessResult, TranslatorConfigObject } from 'node-html-markdown'
+import { PostProcessResult, TranslatorConfigObject } from '@clearfeed-ai/node-html-markdown'
 import { tagSurround, isWhiteSpaceOnly } from './utils'
 // import { ElementNode } from 'node-html-markdown/dist/nodes'
 
