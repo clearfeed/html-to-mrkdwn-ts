@@ -1,4 +1,4 @@
-import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown'
+import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from '@clearfeed-ai/node-html-markdown'
 import translators from './translators'
 import { findFirstImageSrc } from './utils'
 
