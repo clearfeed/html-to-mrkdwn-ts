@@ -66,7 +66,19 @@ const translators: TranslatorConfigObject = {
   },
   'div': {
     surroundingNewlines: 1
-  }
+  },
+  'table': {
+        surroundingNewlines: 1
+    },
+    'tr': {
+        surroundingNewlines: 1
+    },
+    'th,td': {
+        surroundingNewlines: false
+    },
+    'caption': {
+        surroundingNewlines: 1
+    }
 }
 
 export default translators
