@@ -1,5 +1,5 @@
-import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from '@clearfeed-ai/node-html-markdown'
-import translators from './translators'
+import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions, TranslatorConfigObject } from '@clearfeed-ai/node-html-markdown'
+import baseTranslators from './translators'
 import { findFirstImageSrc } from './utils'
 
 const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
@@ -21,8 +21,17 @@ const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
   lineStartEscape: [] as any
 }
 
-const htmlToMrkdwn = (html: string, options: Partial<NodeHtmlMarkdownOptions> = {}) => {
-  const result = NodeHtmlMarkdown.translate(html, { ...baseOptions, ...options }, translators)
+const htmlToMrkdwn = (
+  html: string,
+  options: Partial<NodeHtmlMarkdownOptions> = {},
+  translators: TranslatorConfigObject = {}
+) => {
+  const result = NodeHtmlMarkdown.translate(
+    html, 
+    { ...baseOptions, ...options },
+    { ...baseTranslators, ...translators }
+  );
+
   return {
     text: result,
     image: findFirstImageSrc(html)
