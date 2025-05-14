@@ -17,7 +17,13 @@ const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
 
   strongDelimiter: '*',
   strikeDelimiter: '~',
-  globalEscape: [] as any,
+
+  /**
+   * Escape underscores in the text as using underscores in words is common example -> this_is_a_word
+   * in NodeHtmlMarkdown we usually escape nested tags and as underscores is used for italic text we remove nested underscores
+   * to avoid this we escape underscores in the text
+   */
+  globalEscape: [/_/gm, '\\$&'] as any,
   lineStartEscape: [] as any
 }
 
@@ -31,9 +37,15 @@ const htmlToMrkdwn = (
     { ...baseOptions, ...options },
     { ...baseTranslators, ...translators }
   );
+  
+
+  /**
+   * As we escape underscores in the text we need to unescape them in the result
+   */
+  const unescapedResult = result.replace(/\\_/g, '_');
 
   return {
-    text: result,
+    text: unescapedResult,
     image: findFirstImageSrc(html)
   }
 }
