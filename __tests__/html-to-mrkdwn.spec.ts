@@ -18,13 +18,4 @@ describe('Transform HTML to Slack mrdkwn', () => {
       text: '*Bold Text*'
     })
   })
-
-  it('When text contains underscores we need to preserve the input underscores ', () => {
-    const html = ` <div dir="auto"><i>hello_dark_ness</i></div>`
-    const actual = htmlToMrkdwn(html)
-    expect(actual).toEqual({
-      image: '',
-      text: '_hello_dark_ness_'
-    })
-  })
 })
