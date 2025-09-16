@@ -480,10 +480,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@clearfeed-ai/node-html-markdown@^1.4.2":
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/@clearfeed-ai/node-html-markdown/-/node-html-markdown-1.4.2.tgz#bb2a8b330a55d7ec53fb5cec8e6daaa4815b4426"
-  integrity sha512-1RTfsKyflormPhdreVk7GGxPZFHplNGCt+MPvfXRnqAI/rXMLUPoDoiIMLqxVD0sQXJNQwirCgLheczxzT2XHQ==
+"@clearfeed-ai/node-html-markdown@^1.4.3":
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/@clearfeed-ai/node-html-markdown/-/node-html-markdown-1.4.3.tgz#dab91a4f24e9d548cc6a3abdc8c07130658f9494"
+  integrity sha512-Adk2JeccrxAyWBgpgmWWArSdNRJi0PqZl9SnZU8iu+MlblDbwvguauTCrgKHHWkLM1W06pPCmDcKc+6lV6MBjQ==
   dependencies:
     node-html-parser "^6.1.1"
 
