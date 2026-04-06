@@ -61,11 +61,30 @@ const translators: TranslatorConfigObject = {
       }
     }
   },
-  'p': {
+  p: {
     surroundingNewlines: 1
   },
-  'div': {
+  div: {
     surroundingNewlines: 1
+  },
+  /* List item — mirrors the default node-html-markdown behaviour so top-level
+   * bullets appear at the start of the line (matching native Slack formatting).
+   * Nested items get the standard 3-space indentation per level. */
+  li: ({ options: { bulletMarker }, indentLevel, listKind, listItemNumber }) => {
+    const indentationLevel = indentLevel || 0
+    return {
+      prefix:
+        '   '.repeat(indentationLevel) +
+        (listKind === 'OL' && listItemNumber !== undefined ? `${listItemNumber}. ` : `${bulletMarker} `),
+      surroundingNewlines: 1,
+      postprocess: ({ content }) =>
+        isWhiteSpaceOnly(content)
+          ? PostProcessResult.RemoveNode
+          : content
+              .trim()
+              .replace(/([^\r\n])(?:\r?\n)+/g, `$1  \n${'   '.repeat(indentationLevel)}`)
+              .replace(/(\S+?)[^\S\r\n]+$/gm, '$1  ')
+    }
   }
 }
 
