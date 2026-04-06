@@ -67,11 +67,9 @@ const translators: TranslatorConfigObject = {
   div: {
     surroundingNewlines: 1
   },
-  /* List item — mirrors the default node-html-markdown behaviour so top-level
-   * bullets appear at the start of the line (matching native Slack formatting).
-   * Nested items get the standard 3-space indentation per level. */
+  /* List item — adds one base indentation level so bullets are always indented in Slack */
   li: ({ options: { bulletMarker }, indentLevel, listKind, listItemNumber }) => {
-    const indentationLevel = indentLevel || 0
+    const indentationLevel = (indentLevel || 0) + 1
     return {
       prefix:
         '   '.repeat(indentationLevel) +
