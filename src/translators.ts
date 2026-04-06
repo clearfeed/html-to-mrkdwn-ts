@@ -72,15 +72,15 @@ const translators: TranslatorConfigObject = {
     const indentationLevel = (indentLevel || 0) + 1
     return {
       prefix:
-        '   '.repeat(indentationLevel) +
-        (listKind === 'OL' && listItemNumber !== undefined ? `${listItemNumber}. ` : `${bulletMarker} `),
+        '  '.repeat(indentationLevel) +
+        (listKind === 'OL' && listItemNumber !== undefined ? `${listItemNumber}. ` : `${bulletMarker}   `),
       surroundingNewlines: 1,
       postprocess: ({ content }) =>
         isWhiteSpaceOnly(content)
           ? PostProcessResult.RemoveNode
           : content
               .trim()
-              .replace(/([^\r\n])(?:\r?\n)+/g, `$1  \n${'   '.repeat(indentationLevel)}`)
+              .replace(/([^\r\n])(?:\r?\n)+/g, `$1  \n${'  '.repeat(indentationLevel)}`)
               .replace(/(\S+?)[^\S\r\n]+$/gm, '$1  ')
     }
   }
