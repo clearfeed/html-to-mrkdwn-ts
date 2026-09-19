@@ -36,20 +36,28 @@ const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
  * rule never sees code block content, which is exactly the content that has to be
  * escaped. Rewriting the source is the only hook that reaches it.
  *
+ * Because it is the source being rewritten, tags have to be stepped over rather than
+ * assumed entity-free: `<a href="...?a=1&amp;b=2">` is ordinary HTML, and escaping that
+ * `&amp;` a second level leaves the href pointing at `...?a=1&amp;b=2` once translated.
+ * The tag alternative below consumes a whole tag - quoted attribute values included, so
+ * a `>` inside one does not end it early - and hands it back untouched.
+ *
  * Slack mention entities are left at one level of escaping so the single decode restores
  * them as live markup: they address a user, group or channel rather than describing
  * text, and a producer that writes `&lt;@U123&gt;` into a text node means the mention.
  * `<@U123>` typed literally inside a code block therefore still resolves, which is what
  * Slack itself does with it.
- *
- * Only entities are touched, so nothing a translator generates from an element is
- * affected: `href`/`src` attributes, and the `<@U123>` on a mention, are all raw
- * characters rather than entities and pass through untouched.
  */
-const escapedSlackEntityOrEntityRegExp = /&lt;[@#!](?:(?!&gt;)[\s\S])*?&gt;|&(amp|lt|gt);/g
+const TAG_PATTERN = '<!--[\\s\\S]*?-->|<[!/?a-zA-Z][^>"\']*(?:(?:"[^"]*"|\'[^\']*\')[^>"\']*)*>'
+const SLACK_ENTITY_PATTERN = '&lt;[@#!](?:(?!&gt;)[\\s\\S])*?&gt;'
+
+const tagOrEntityRegExp = new RegExp(
+  `${TAG_PATTERN}|${SLACK_ENTITY_PATTERN}|&(amp|lt|gt);`,
+  'g'
+)
 
 const preserveAuthoredEntities = (html: string): string =>
-  html.replace(escapedSlackEntityOrEntityRegExp, (match, entityName?: string) =>
+  html.replace(tagOrEntityRegExp, (match, entityName?: string) =>
     entityName ? `&amp;${entityName};` : match
   )
 

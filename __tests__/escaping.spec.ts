@@ -89,6 +89,54 @@ describe('entity escaping', () => {
    * `pre`/`code` are translated with `noEscape`, which returns the text node before the
    * visitor reaches `textReplace`. Escaping the source HTML is what reaches them.
    */
+  /**
+   * The rewrite runs on the source HTML, so a tag has to be stepped over rather than
+   * assumed entity-free. `&amp;` in a query string is ordinary HTML; escaping it a
+   * second level leaves the translated link pointing somewhere else.
+   */
+  describe('attributes are left alone', () => {
+    it('does not change an escaped ampersand in an href', () => {
+      expect(htmlToMrkdwn('<a href="https://example.com?a=1&amp;b=2">link</a>').text).toEqual(
+        '<https://example.com?a=1&b=2|link>'
+      )
+    })
+
+    it('does not change escaped angle brackets in an href', () => {
+      expect(htmlToMrkdwn('<a href="https://example.com?q=&lt;t&gt;">link</a>').text).toEqual(
+        '<https://example.com?q=<t>|link>'
+      )
+    })
+
+    it('does not change an escaped ampersand in an img src', () => {
+      expect(htmlToMrkdwn('<img src="https://x.com/a.png?w=1&amp;h=2" alt="a" />').text).toEqual(
+        '<https://x.com/a.png?w=1&h=2|a>'
+      )
+    })
+
+    it('does not change entities in a title attribute', () => {
+      expect(htmlToMrkdwn('<a href="https://x.com" title="A &amp; B">link</a>').text).toEqual(
+        '<https://x.com "A & B"|link>'
+      )
+    })
+
+    /** A `>` inside a quoted value must not end the tag early. */
+    it('steps over a quoted attribute containing an angle bracket', () => {
+      expect(htmlToMrkdwn('<a href="https://x.com" title="a &gt; b">link</a>').text).toEqual(
+        '<https://x.com "a > b"|link>'
+      )
+    })
+
+    it('escapes author text alongside an attribute it left alone', () => {
+      expect(
+        htmlToMrkdwn('<p>use &lt;div&gt; <a href="https://x.com?a=1&amp;b=2">docs</a></p>').text
+      ).toEqual('use &lt;div&gt; <https://x.com?a=1&b=2|docs>')
+    })
+
+    it('leaves a comment out of the escaping', () => {
+      expect(htmlToMrkdwn('<!-- a &amp; b --><p>&lt;i&gt;</p>').text).toEqual('&lt;i&gt;')
+    })
+  })
+
   describe('code blocks reached despite noEscape', () => {
     const appServerTranslators = {
       pre: { noEscape: true, preserveWhitespace: true, surroundingNewlines: 1 }
