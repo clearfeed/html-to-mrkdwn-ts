@@ -61,6 +61,19 @@ const translators: TranslatorConfigObject = {
       }
     }
   },
+  /**
+   * Slack mention markup (`<@U123>`, `<#C123>`, `<!subteam^S123>`) carried on the
+   * element rather than in its text, so the entity escaping does not consume it.
+   * Emitting it from `postprocess` keeps it generated output, not node text.
+   *
+   * A span without the attribute is left to the default handling.
+   */
+  span: ({ node }) => {
+    const mentionTag = node.getAttribute('data-mention-tag')
+    if (!mentionTag) return {}
+
+    return { postprocess: () => mentionTag }
+  },
   'p': {
     surroundingNewlines: 1
   },
