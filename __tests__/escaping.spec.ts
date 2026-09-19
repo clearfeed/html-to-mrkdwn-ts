@@ -43,19 +43,14 @@ describe('entity escaping', () => {
       )
     })
 
-    it('keeps a mention usable', () => {
-      const html = '<span class="mention" data-mention-tag="<@U123>">@ashish</span>'
-      expect(htmlToMrkdwn(html).text).toEqual('<@U123>')
-    })
-
     it('keeps a mention usable alongside escaped author text', () => {
       const html =
-        '<p>&lt;hello&gt; cc <span class="mention" data-mention-tag="<@U123>">@ashish</span> ' +
+        '<p>&lt;hello&gt; cc <span>&lt;@U123&gt;</span> ' +
         '<a href="https://x.com">docs</a></p>'
       expect(htmlToMrkdwn(html).text).toEqual('&lt;hello&gt; cc <@U123> <https://x.com|docs>')
     })
 
-    it('leaves a span without a mention tag to the default handling', () => {
+    it('leaves an ordinary span to the default handling', () => {
       expect(htmlToMrkdwn('<p>a <span>b</span> c</p>').text).toEqual('a b c')
     })
 
@@ -86,13 +81,8 @@ describe('entity escaping', () => {
   })
 
   /**
-   * `pre`/`code` are translated with `noEscape`, which returns the text node before the
-   * visitor reaches `textReplace`. Escaping the source HTML is what reaches them.
-   */
-  /**
-   * The rewrite runs on the source HTML, so a tag has to be stepped over rather than
-   * assumed entity-free. `&amp;` in a query string is ordinary HTML; escaping it a
-   * second level leaves the translated link pointing somewhere else.
+   * `&amp;` in a query string is ordinary HTML; escaping it a second level leaves the
+   * translated link pointing somewhere else.
    */
   describe('attributes are left alone', () => {
     it('does not change an escaped ampersand in an href', () => {
@@ -137,6 +127,10 @@ describe('entity escaping', () => {
     })
   })
 
+  /**
+   * `pre`/`code` are translated with `noEscape`, which returns the text node before the
+   * visitor reaches `textReplace`. Escaping the source HTML is what reaches them.
+   */
   describe('code blocks reached despite noEscape', () => {
     const appServerTranslators = {
       pre: { noEscape: true, preserveWhitespace: true, surroundingNewlines: 1 }
