@@ -81,6 +81,64 @@ describe('entity escaping', () => {
   })
 
   /**
+   * The parser decodes with browser rules, so `&lt;` is only one of the spellings that
+   * produces a `<`. Inbound email chooses its own encoding, so the uncommon forms reach
+   * this package in practice.
+   */
+  describe('every spelling the parser decodes', () => {
+    it('escapes decimal numeric angle-bracket entities', () => {
+      expect(htmlToMrkdwn('<p>&#60;img src=x onerror=alert(1)&#62;</p>').text).toEqual(
+        '&lt;img src=x onerror=alert(1)&gt;'
+      )
+    })
+
+    it('escapes hexadecimal numeric angle-bracket entities', () => {
+      expect(htmlToMrkdwn('<p>&#x3C;div&#x3E;</p>').text).toEqual('&lt;div&gt;')
+    })
+
+    it('escapes an upper case hexadecimal marker', () => {
+      expect(htmlToMrkdwn('<p>&#X3c;div&#X3e;</p>').text).toEqual('&lt;div&gt;')
+    })
+
+    it('escapes zero-padded numeric entities', () => {
+      expect(htmlToMrkdwn('<p>&#060;div&#062;</p>').text).toEqual('&lt;div&gt;')
+    })
+
+    it('escapes a numeric ampersand', () => {
+      expect(htmlToMrkdwn('<p>A &#38; B</p>').text).toEqual('A &amp; B')
+    })
+
+    it('escapes upper case named entities', () => {
+      expect(htmlToMrkdwn('<p>&LT;div&GT;</p>').text).toEqual('&lt;div&gt;')
+    })
+
+    it('escapes named entities written without a semicolon', () => {
+      expect(htmlToMrkdwn('<p>&lt div &gt</p>').text).toEqual('&lt; div &gt;')
+    })
+
+    it('escapes a numeric entity inside a code block', () => {
+      expect(htmlToMrkdwn('<pre><code>&#60;div&#62;</code></pre>').text).toEqual(
+        '```\n&lt;div&gt;\n```'
+      )
+    })
+
+    it('leaves a numeric entity for a harmless character alone', () => {
+      expect(htmlToMrkdwn('<p>it&#39;s &quot;fine&quot;</p>').text).toEqual('it\'s "fine"')
+    })
+
+    /** `&Lt;` is U+226A, not a `<`, so it is not markup and is left as it decodes. */
+    it('leaves a named entity for a different character alone', () => {
+      expect(htmlToMrkdwn('<p>&Lt;</p>').text).toEqual('\u226a')
+    })
+
+    it('does not change a numeric ampersand inside an href', () => {
+      expect(htmlToMrkdwn('<a href="https://x.com?a=1&#38;b=2">d</a>').text).toEqual(
+        '<https://x.com?a=1&b=2|d>'
+      )
+    })
+  })
+
+  /**
    * `&amp;` in a query string is ordinary HTML; escaping it a second level leaves the
    * translated link pointing somewhere else.
    */
