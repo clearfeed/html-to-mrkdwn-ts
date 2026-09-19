@@ -53,34 +53,38 @@ const tagOrEntityRegExp = new RegExp(
   'g'
 )
 
-const namedReferenceCodePoints: Record<string, number> = {
-  amp: 38,
-  AMP: 38,
-  lt: 60,
-  LT: 60,
-  gt: 62,
-  GT: 62
+/**
+ * The three characters that can turn stored text back into markup, each paired with the
+ * spelling that still reads as that character after the parser's single decode:
+ * `&amp;lt;` decodes to `&lt;`, which is the shape Slack would have sent.
+ */
+const doublyEscapedByCharacter: Record<string, string> = {
+  '&': '&amp;amp;',
+  '<': '&amp;lt;',
+  '>': '&amp;gt;'
 }
 
-const doublyEscapedByCodePoint: Record<number, string> = {
-  38: '&amp;amp;',
-  60: '&amp;lt;',
-  62: '&amp;gt;'
-}
+/** HTML spells these in lower case and all caps; `&Lt;` is U+226A, a different character. */
+const characterByEntityName: Record<string, string> = { amp: '&', lt: '<', gt: '>' }
 
-const codePointOf = (reference: string): number => {
+/** The character a reference decodes to, or '' when it does not name one. */
+const decodedCharacterOf = (reference: string): string => {
   const body = reference.slice(1).replace(/;$/, '')
-  if (body.charAt(0) !== '#') return namedReferenceCodePoints[body]
+  if (body.charAt(0) !== '#') return characterByEntityName[body.toLowerCase()] ?? ''
 
   const digits = body.slice(1)
-  return digits.charAt(0) === 'x' || digits.charAt(0) === 'X'
-    ? parseInt(digits.slice(1), 16)
-    : parseInt(digits, 10)
+  const codePoint =
+    digits.charAt(0).toLowerCase() === 'x'
+      ? parseInt(digits.slice(1), 16)
+      : parseInt(digits, 10)
+
+  // A reference may name a code point that does not exist; fromCodePoint throws on those.
+  return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : ''
 }
 
 const preserveAuthoredEntities = (html: string): string =>
   html.replace(tagOrEntityRegExp, (match, reference?: string) =>
-    reference ? doublyEscapedByCodePoint[codePointOf(reference)] ?? match : match
+    reference ? doublyEscapedByCharacter[decodedCharacterOf(reference)] ?? match : match
   )
 
 const htmlToMrkdwn = (

@@ -131,6 +131,12 @@ describe('entity escaping', () => {
       expect(htmlToMrkdwn('<p>&Lt;</p>').text).toEqual('\u226a')
     })
 
+    /** Resolving a reference to its character must not throw on one that names no character. */
+    it('leaves a reference outside the Unicode range alone', () => {
+      expect(htmlToMrkdwn('<p>&#999999999;</p>').text).toEqual('\ufffd')
+      expect(htmlToMrkdwn('<p>&#xFFFFFFF;</p>').text).toEqual('\ufffd')
+    })
+
     it('does not change a numeric ampersand inside an href', () => {
       expect(htmlToMrkdwn('<a href="https://x.com?a=1&#38;b=2">d</a>').text).toEqual(
         '<https://x.com?a=1&b=2|d>'
