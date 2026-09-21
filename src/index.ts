@@ -1,5 +1,5 @@
 import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions, TranslatorConfigObject } from '@clearfeed-ai/node-html-markdown'
-import { parse, Node, NodeType, TextNode } from 'node-html-parser'
+import { HTMLElement, Node, NodeType, TextNode, parse } from 'node-html-parser'
 import baseTranslators from './translators'
 import { findFirstImageSrc } from './utils'
 
@@ -25,7 +25,7 @@ const baseOptions: Partial<NodeHtmlMarkdownOptions> = {
 /** Same settings node-html-markdown parses with, so both passes agree on what is text. */
 const parserOptions = {
   lowerCaseTagName: false,
-  comment: true,
+  comment: false,
   fixNestedATags: true,
   blockTextElements: { script: false, noscript: false, style: false }
 }
@@ -48,6 +48,7 @@ const SLACK_ENTITY_PATTERN =
   ')(?:\\|[^<>]*)?>'
 
 const slackEntityOrSpecialCharacter = new RegExp(`${SLACK_ENTITY_PATTERN}|[&<>]`, 'g')
+const specialCharacter = /[&<>]/g
 
 const slackEscapeByCharacter: Record<string, string> = {
   '&': '&amp;',
@@ -55,8 +56,11 @@ const slackEscapeByCharacter: Record<string, string> = {
   '>': '&gt;'
 }
 
-const toSlackText = (text: string): string =>
-  text.replace(slackEntityOrSpecialCharacter, (match) => slackEscapeByCharacter[match] ?? match)
+/** Code is quoted verbatim, so Slack syntax inside it is text and gets escaped too. */
+const toSlackText = (text: string, literal: boolean): string =>
+  text.replace(literal ? specialCharacter : slackEntityOrSpecialCharacter, (match) =>
+    slackEscapeByCharacter[match] ?? match
+  )
 
 /**
  * node-html-markdown decodes text nodes once, so Slack's `&lt;` is stored as `&amp;lt;`
@@ -71,10 +75,19 @@ const reparseEscapeByCharacter: Record<string, string> = {
 const encodeForReparse = (text: string): string =>
   text.replace(/[&<>\u00a0]/g, (character) => reparseEscapeByCharacter[character])
 
-const forEachTextNode = (node: Node, visit: (textNode: TextNode) => void): void => {
+const LITERAL_TAGS = new Set(['CODE', 'PRE'])
+
+const forEachTextNode = (
+  node: Node,
+  visit: (textNode: TextNode, literal: boolean) => void,
+  literal = false
+): void => {
   for (const child of node.childNodes) {
-    if (child.nodeType === NodeType.TEXT_NODE) visit(child as TextNode)
-    else forEachTextNode(child, visit)
+    if (child.nodeType === NodeType.TEXT_NODE) visit(child as TextNode, literal)
+    else {
+      const tagName = (child as HTMLElement).rawTagName
+      forEachTextNode(child, visit, literal || LITERAL_TAGS.has(tagName?.toUpperCase()))
+    }
   }
 }
 
@@ -96,8 +109,8 @@ const normalizeHtmlForSlack = (html: string): string => {
   const root = parse(html.replace(LEADING_DOCTYPE, ''), parserOptions)
 
   // `text` decodes; `rawText` is written back out verbatim.
-  forEachTextNode(root, (textNode) => {
-    textNode.rawText = encodeForReparse(toSlackText(textNode.text))
+  forEachTextNode(root, (textNode, literal) => {
+    textNode.rawText = encodeForReparse(toSlackText(textNode.text, literal))
   })
 
   return root.toString()

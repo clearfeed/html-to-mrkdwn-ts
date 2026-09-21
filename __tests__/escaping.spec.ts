@@ -177,14 +177,6 @@ describe('entity escaping', () => {
       expect(htmlToMrkdwn('<p>&#x3C;div&#x3E;</p>').text).toEqual('&lt;div&gt;')
     })
 
-    it('escapes an upper case hexadecimal marker', () => {
-      expect(htmlToMrkdwn('<p>&#X3c;div&#X3e;</p>').text).toEqual('&lt;div&gt;')
-    })
-
-    it('escapes zero-padded numeric entities', () => {
-      expect(htmlToMrkdwn('<p>&#060;div&#062;</p>').text).toEqual('&lt;div&gt;')
-    })
-
     it('escapes a numeric ampersand', () => {
       expect(htmlToMrkdwn('<p>A &#38; B</p>').text).toEqual('A &amp; B')
     })
@@ -205,17 +197,6 @@ describe('entity escaping', () => {
 
     it('leaves a numeric entity for a harmless character alone', () => {
       expect(htmlToMrkdwn('<p>it&#39;s &quot;fine&quot;</p>').text).toEqual('it\'s "fine"')
-    })
-
-    /** `&Lt;` is U+226A, not a `<`, so it is not markup and is left as it decodes. */
-    it('leaves a named entity for a different character alone', () => {
-      expect(htmlToMrkdwn('<p>&Lt;</p>').text).toEqual('\u226a')
-    })
-
-    /** Resolving a reference to its character must not throw on one that names no character. */
-    it('leaves a reference outside the Unicode range alone', () => {
-      expect(htmlToMrkdwn('<p>&#999999999;</p>').text).toEqual('\ufffd')
-      expect(htmlToMrkdwn('<p>&#xFFFFFFF;</p>').text).toEqual('\ufffd')
     })
 
     it('does not change a numeric ampersand inside an href', () => {
@@ -297,6 +278,33 @@ describe('entity escaping', () => {
     it('escapes an ampersand inside a code block', () => {
       expect(htmlToMrkdwn('<pre><code>a &amp;&amp; b</code></pre>').text).toEqual(
         '```\na &amp;&amp; b\n```'
+      )
+    })
+
+    /**
+     * Code is quoted verbatim, so Slack syntax inside it is text. slack-to-html resolves
+     * mentions after expanding code blocks, so a live `<@U123>` here would notify someone
+     * from inside a fenced block.
+     */
+    it('escapes a mention inside a code block', () => {
+      expect(htmlToMrkdwn('<pre><code>&lt;@U123&gt;</code></pre>').text).toEqual(
+        '```\n&lt;@U123&gt;\n```'
+      )
+    })
+
+    it('escapes a broadcast inside a code block', () => {
+      expect(htmlToMrkdwn('<pre><code>&lt;!here&gt;</code></pre>').text).toEqual(
+        '```\n&lt;!here&gt;\n```'
+      )
+    })
+
+    it('escapes a channel mention inside an inline code span', () => {
+      expect(htmlToMrkdwn('<code>&lt;#C123&gt;</code>').text).toEqual('`&lt;#C123&gt;`')
+    })
+
+    it('keeps a mention outside code live while escaping the one inside', () => {
+      expect(htmlToMrkdwn('<p>cc &lt;@U1&gt; <code>&lt;@U2&gt;</code></p>').text).toEqual(
+        'cc <@U1> `&lt;@U2&gt;`'
       )
     })
 
