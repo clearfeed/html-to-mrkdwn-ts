@@ -123,6 +123,24 @@ describe('entity escaping', () => {
         '<@U123> and &lt;!DOCTYPE&gt;'
       )
     })
+
+    /**
+     * A document's own doctype is not text. Inbound email usually carries one, and
+     * escaping it would print the declaration at the top of the message.
+     */
+    it('drops the doctype of an HTML document', () => {
+      expect(htmlToMrkdwn('<!DOCTYPE html><html><body><p>hi</p></body></html>').text).toEqual(
+        'hi'
+      )
+    })
+
+    it('drops a transitional doctype', () => {
+      const html =
+        '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" ' +
+        '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html><body>' +
+        '<p>hi</p></body></html>'
+      expect(htmlToMrkdwn(html).text).toEqual('hi')
+    })
   })
 
   /**

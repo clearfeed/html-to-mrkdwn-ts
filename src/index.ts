@@ -79,6 +79,13 @@ const forEachTextNode = (node: Node, visit: (textNode: TextNode) => void): void 
 }
 
 /**
+ * The parser reports a doctype as text rather than a node, and node-html-markdown drops
+ * it - escaping it would print it into the message instead. Anchored to the start of the
+ * document, so `&lt;!DOCTYPE html&gt;` an author typed stays text.
+ */
+const LEADING_DOCTYPE = /^\s*<!DOCTYPE[^>]*>/i
+
+/**
  * Runs before node-html-markdown because that decodes text nodes, leaving
  * `&lt;div&gt;` indistinguishable from a real tag; `textReplace` is no help either, since
  * `pre`/`code` use `noEscape` and never reach it. Letting the parser say what is text
@@ -86,7 +93,7 @@ const forEachTextNode = (node: Node, visit: (textNode: TextNode) => void): void 
  * hands.
  */
 const normalizeHtmlForSlack = (html: string): string => {
-  const root = parse(html, parserOptions)
+  const root = parse(html.replace(LEADING_DOCTYPE, ''), parserOptions)
 
   // `text` decodes; `rawText` is written back out verbatim.
   forEachTextNode(root, (textNode) => {
