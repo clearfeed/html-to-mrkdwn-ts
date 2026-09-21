@@ -43,7 +43,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@clearfeed-ai/node-html-markdown": "^1.4.4"
+    "@clearfeed-ai/node-html-markdown": "^1.4.4",
+    "node-html-parser": "^6.1.1"
   },
   "resolutions": {
     "minimatch": "^9.0.7"

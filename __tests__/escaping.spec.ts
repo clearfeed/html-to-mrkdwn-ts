@@ -78,6 +78,69 @@ describe('entity escaping', () => {
     it('keeps a broadcast command written into a text node', () => {
       expect(htmlToMrkdwn('<p>&lt;!here&gt; ping</p>').text).toEqual('<!here> ping')
     })
+
+    it('keeps a labelled mention written into a text node', () => {
+      expect(htmlToMrkdwn('<p>cc &lt;@U123|ashish&gt;</p>').text).toEqual('cc <@U123|ashish>')
+    })
+
+    it('keeps a date written into a text node', () => {
+      expect(
+        htmlToMrkdwn('<p>&lt;!date^1392734382^{date_short}|Feb 18, 2014&gt;</p>').text
+      ).toEqual('<!date^1392734382^{date_short}|Feb 18, 2014>')
+    })
+  })
+
+  /**
+   * Only the constructs Slack documents are passed through. Anything else shaped like a
+   * Slack entity is author text: letting `<!...>` through unescaped put a declaration
+   * back into the markup, where the converter dropped it as a tag.
+   */
+  describe('text that only looks like a Slack entity', () => {
+    it('escapes a doctype declaration', () => {
+      expect(htmlToMrkdwn('<p>&lt;!DOCTYPE html&gt;</p>').text).toEqual('&lt;!DOCTYPE html&gt;')
+    })
+
+    it('escapes an entity declaration', () => {
+      expect(htmlToMrkdwn('<p>&lt;!ENTITY x SYSTEM "f"&gt;</p>').text).toEqual(
+        '&lt;!ENTITY x SYSTEM "f"&gt;'
+      )
+    })
+
+    it('escapes an unknown bang keyword', () => {
+      expect(htmlToMrkdwn('<p>&lt;!notacommand&gt;</p>').text).toEqual('&lt;!notacommand&gt;')
+    })
+
+    it('escapes a mention whose id is not a Slack id', () => {
+      expect(htmlToMrkdwn('<p>&lt;@not an id&gt;</p>').text).toEqual('&lt;@not an id&gt;')
+    })
+
+    it('escapes a channel reference without an id', () => {
+      expect(htmlToMrkdwn('<p>&lt;#general&gt;</p>').text).toEqual('&lt;#general&gt;')
+    })
+
+    it('escapes the lookalike but keeps a real mention beside it', () => {
+      expect(htmlToMrkdwn('<p>&lt;@U123&gt; and &lt;!DOCTYPE&gt;</p>').text).toEqual(
+        '<@U123> and &lt;!DOCTYPE&gt;'
+      )
+    })
+  })
+
+  /**
+   * A `<`, `>` or `&` the author typed without escaping it is still one of the characters
+   * Slack stores escaped, and the parser hands it over as text like any other.
+   */
+  describe('characters the author left unescaped', () => {
+    it('escapes a bare angle bracket', () => {
+      expect(htmlToMrkdwn('<p>a < b</p>').text).toEqual('a &lt; b')
+    })
+
+    it('escapes a bare ampersand', () => {
+      expect(htmlToMrkdwn('<p>Q&A</p>').text).toEqual('Q&amp;A')
+    })
+
+    it('escapes a bare greater-than', () => {
+      expect(htmlToMrkdwn('<p>5 > 3</p>').text).toEqual('5 &gt; 3')
+    })
   })
 
   /**
