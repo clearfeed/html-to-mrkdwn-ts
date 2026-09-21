@@ -34,14 +34,19 @@ const parserOptions = {
  * Slack syntax a producer wrote into a text node (Quill emits mentions this way) means
  * the real thing, so it passes through. Only these documented forms: anything else
  * shaped like `<!...>`, such as `<!DOCTYPE html>`, is text and gets escaped.
+ *
+ * Ids carry their type as a prefix - `U`/`W` for users, `C` for channels, `S` for user
+ * groups - and slack-to-html resolves only those, so `<@ABC>` is author text. Its user
+ * and channel patterns fall back to rendering whatever is inside as a name, so a loose
+ * id here does not stay literal downstream; it renders as a mention.
  * {@link https://api.slack.com/reference/surfaces/formatting}
  */
-const SLACK_ID = '[A-Z0-9]+'
 const SLACK_ENTITY_PATTERN =
   '<(?:' +
   [
-    `[@#]${SLACK_ID}`,
-    `!subteam\\^${SLACK_ID}`,
+    '@[UW][A-Z0-9]+',
+    '#C[A-Z0-9]+',
+    '!subteam\\^S[A-Z0-9]+',
     '!(?:here|channel|everyone)',
     '!date\\^[0-9]+\\^[^|<>]*'
   ].join('|') +

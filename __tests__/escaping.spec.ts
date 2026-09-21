@@ -79,6 +79,10 @@ describe('entity escaping', () => {
       expect(htmlToMrkdwn('<p>&lt;!here&gt; ping</p>').text).toEqual('<!here> ping')
     })
 
+    it('keeps an enterprise grid user mention', () => {
+      expect(htmlToMrkdwn('<p>cc &lt;@W0123&gt;</p>').text).toEqual('cc <@W0123>')
+    })
+
     it('keeps a labelled mention written into a text node', () => {
       expect(htmlToMrkdwn('<p>cc &lt;@U123|ashish&gt;</p>').text).toEqual('cc <@U123|ashish>')
     })
@@ -112,6 +116,23 @@ describe('entity escaping', () => {
 
     it('escapes a mention whose id is not a Slack id', () => {
       expect(htmlToMrkdwn('<p>&lt;@not an id&gt;</p>').text).toEqual('&lt;@not an id&gt;')
+    })
+
+    /**
+     * Ids carry their type as a prefix. slack-to-html falls back to rendering whatever
+     * is inside `<@...>`/`<#...>` as a name, so a loose id left live renders as a
+     * mention rather than as the text the author typed.
+     */
+    it('escapes a user mention without the U or W prefix', () => {
+      expect(htmlToMrkdwn('<p>&lt;@ABC&gt;</p>').text).toEqual('&lt;@ABC&gt;')
+    })
+
+    it('escapes a channel reference without the C prefix', () => {
+      expect(htmlToMrkdwn('<p>&lt;#GENERAL&gt;</p>').text).toEqual('&lt;#GENERAL&gt;')
+    })
+
+    it('escapes a user group without the S prefix', () => {
+      expect(htmlToMrkdwn('<p>&lt;!subteam^ABC&gt;</p>').text).toEqual('&lt;!subteam^ABC&gt;')
     })
 
     it('escapes a channel reference without an id', () => {
@@ -283,8 +304,8 @@ describe('entity escaping', () => {
 
     /**
      * Code is quoted verbatim, so Slack syntax inside it is text. slack-to-html resolves
-     * mentions after expanding code blocks, so a live `<@U123>` here would notify someone
-     * from inside a fenced block.
+     * mentions after expanding code blocks, so a live `<@U123>` here would be rendered
+     * as a mention instead of as literal code.
      */
     it('escapes a mention inside a code block', () => {
       expect(htmlToMrkdwn('<pre><code>&lt;@U123&gt;</code></pre>').text).toEqual(
