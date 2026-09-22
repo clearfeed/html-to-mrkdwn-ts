@@ -279,6 +279,11 @@ describe('entity escaping', () => {
    * visitor reaches `textReplace`. Escaping the source HTML is what reaches them.
    */
   describe('code blocks reached despite noEscape', () => {
+    /**
+     * A copy of app-server's `pre` override. It cannot be imported: app-server depends on
+     * this package, so the arrow points one way only. What the test pins is that a consumer
+     * overriding `pre` still reaches the escaping - keep this in step if that override moves.
+     */
     const appServerTranslators = {
       pre: { noEscape: true, preserveWhitespace: true, surroundingNewlines: 1 }
     }
@@ -336,9 +341,15 @@ describe('entity escaping', () => {
     })
   })
 
-  describe('shape parity with Slack', () => {
-    it('produces what Slack would have stored for the same message', () => {
-      // Slack escapes `<` and `>` in message text; this must match.
+  /**
+   * These pin the shape this package stores. They are not a parity check: both sides are
+   * literals we wrote, and `slack-to-html` is not a dependency here, so nothing in this
+   * repo notices if our shape and Slack's drift apart. Comparing a ClearFeed-authored
+   * message against the same message stored from Slack needs both origins and a renderer,
+   * which makes it an app-server-level test.
+   */
+  describe('the shape author text is stored in', () => {
+    it('escapes the characters Slack stores escaped', () => {
       expect(htmlToMrkdwn('<p>use &lt;div&gt; here</p>').text).toEqual('use &lt;div&gt; here')
     })
 
