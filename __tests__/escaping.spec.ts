@@ -392,6 +392,51 @@ describe('entity escaping', () => {
   })
 
   /**
+   * The editor saves a picked variable as `<span>{{request.assignee.id}}</span>`, so once
+   * Handlebars fills it a mention typed around it arrives split across text nodes.
+   */
+  describe('a mention split across plain spans', () => {
+    it.each([
+      ['a picked variable', '<p>&lt;@<span>U024NBDEDJT</span>&gt;</p>', '<@U024NBDEDJT>'],
+      ['nested spans', '<p>&lt;@<span><span>U024</span>NBDEDJT</span>&gt;</p>', '<@U024NBDEDJT>'],
+      ['a team', '<p>&lt;!subteam^<span>S0123</span>&gt;</p>', '<!subteam^S0123>'],
+      ['a channel', '<p>&lt;#<span>C0123</span>|general&gt;</p>', '<#C0123|general>'],
+      [
+        'several mentions in text',
+        '<p>Hi &lt;@<span>U1</span>&gt; and &lt;@<span>W2</span>&gt;</p>',
+        'Hi <@U1> and <@W2>'
+      ]
+    ])('keeps %s live', (_, html, expected) => {
+      expect(htmlToMrkdwn(html).text).toEqual(expected)
+    })
+
+    it.each([
+      ['user', '<p>&lt;@<span>abc</span>&gt;</p>', '&lt;@abc&gt;'],
+      ['team', '<p>&lt;!subteam^<span>ABC</span>&gt;</p>', '&lt;!subteam^ABC&gt;']
+    ])('still escapes a malformed %s id', (_, html, expected) => {
+      expect(htmlToMrkdwn(html).text).toEqual(expected)
+    })
+
+    it('still escapes it inside code', () => {
+      expect(htmlToMrkdwn('<pre><code>&lt;@<span>U1</span>&gt;</code></pre>').text).toEqual(
+        '```\n&lt;@U1&gt;\n```'
+      )
+    })
+
+    it.each([
+      ['a line break', '<p>&lt;@<br><span>U1</span>&gt;</p>'],
+      ['inline code', '<p>&lt;@<code><span>U1</span></code>&gt;</p>'],
+      ['a styled span', '<p>&lt;@<span style="color:red">U1</span>&gt;</p>']
+    ])('does not join across %s', (_, html) => {
+      expect(htmlToMrkdwn(html).text).not.toContain('<@')
+    })
+
+    it('does not form an entity across spans', () => {
+      expect(htmlToMrkdwn('<p>&amp;am<span>p;</span></p>').text).toEqual('&amp;amp;')
+    })
+  })
+
+  /**
    * These pin the shape this package stores. They are not a parity check: both sides are
    * literals we wrote, and `slack-to-html` is not a dependency here, so nothing in this
    * repo notices if our shape and Slack's drift apart. Comparing a ClearFeed-authored

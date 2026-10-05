@@ -128,6 +128,40 @@ const forEachTextNode = (
  */
 const LEADING_DOCTYPE = /^\s*<!DOCTYPE[^>]*>/i
 
+const isPlainSpan = (node: Node): node is HTMLElement =>
+  node.nodeType === NodeType.ELEMENT_NODE &&
+  (node as HTMLElement).rawTagName?.toUpperCase() === 'SPAN' &&
+  !(node as HTMLElement).rawAttrs.trim()
+
+/**
+ * The editor saves a picked variable as an attribute-free `<span>`, so a mention typed
+ * around one arrives split: `&lt;@<span>U123</span>&gt;`. Escaping each text node alone
+ * never sees the whole `<@U123>`, so unwrap those spans and join the text either side.
+ * Any other element - `br`, `a`, `code`, a styled span - still separates.
+ *
+ * Joined from decoded text, re-encoded losslessly: joining raw text would let
+ * `&am<span>p;</span>` turn into an `&amp;` nobody wrote.
+ */
+const unwrapPlainSpans = (element: HTMLElement): void => {
+  const childNodes: Node[] = []
+  for (const child of element.childNodes) {
+    if (child.nodeType === NodeType.ELEMENT_NODE) unwrapPlainSpans(child as HTMLElement)
+    for (const node of isPlainSpan(child) ? child.childNodes : [child]) {
+      const previous = childNodes[childNodes.length - 1]
+      if (node.nodeType === NodeType.TEXT_NODE && previous?.nodeType === NodeType.TEXT_NODE) {
+        childNodes[childNodes.length - 1] = new TextNode(
+          encodeForReparse(previous.text + node.text),
+          element
+        )
+      } else {
+        node.parentNode = element
+        childNodes.push(node)
+      }
+    }
+  }
+  element.childNodes = childNodes
+}
+
 /**
  * Runs before node-html-markdown because that decodes text nodes, leaving
  * `&lt;div&gt;` indistinguishable from a real tag; `textReplace` is no help either, since
@@ -137,6 +171,7 @@ const LEADING_DOCTYPE = /^\s*<!DOCTYPE[^>]*>/i
  */
 const normalizeHtmlForSlack = (html: string): string => {
   const root = parse(html.replace(LEADING_DOCTYPE, ''), parserOptions)
+  unwrapPlainSpans(root)
 
   // `text` decodes; `rawText` is written back out verbatim.
   forEachTextNode(root, (textNode, inCodeLiteral) => {
