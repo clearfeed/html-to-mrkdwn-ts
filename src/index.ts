@@ -35,8 +35,9 @@ const parserOptions = {
 }
 
 /**
- * Slack syntax a producer wrote into a text node (Quill emits mentions this way) means
- * the real thing, so it passes through. Only these documented forms: anything else
+ * Slack syntax a producer wrote into a text node (Quill emits mentions this way, and
+ * app-server interpolates generated Slack links into HTML templates) means the real
+ * thing, so it passes through. Only these documented forms: anything else
  * shaped like `<!...>`, such as `<!DOCTYPE html>`, is text and gets escaped.
  *
  * Ids carry their type as a prefix - `U`/`W` for users, `C` for channels, `S` for user
@@ -54,7 +55,11 @@ const SLACK_ENTITY_PATTERN =
     '!(?:here|channel|everyone)', // broadcast: <!here>
     // date: <!date^1392734382^{date_num}> - the only form carrying an inner `^`-delimited
     // token, so its class excludes `|` to stop before the shared label group below.
-    '!date\\^[0-9]+\\^[^|<>]*'
+    '!date\\^[0-9]+\\^[^|<>]*',
+    // link: <https://example.com|label> - web and mail schemes only, so a
+    // `<javascript:...>` the author typed stays text. No `"` either: slack-to-html writes
+    // the url into a double-quoted href without escaping it.
+    '(?:https?|mailto):[^|<>\\s"]+'
   ].join('|') +
   // Shared by every form above, which is why <#C012AB3CD|general> matches without any
   // alternative spelling the label out itself.

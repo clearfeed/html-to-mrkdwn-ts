@@ -92,6 +92,22 @@ describe('entity escaping', () => {
         htmlToMrkdwn('<p>&lt;!date^1392734382^{date_short}|Feb 18, 2014&gt;</p>').text
       ).toEqual('<!date^1392734382^{date_short}|Feb 18, 2014>')
     })
+
+    it('keeps a labelled link written into a text node', () => {
+      expect(htmlToMrkdwn('<p>See &lt;https://x.com/a?b=1&amp;c=2|the guide&gt;</p>').text).toEqual(
+        'See <https://x.com/a?b=1&c=2|the guide>'
+      )
+    })
+
+    it('keeps a bare link written into a text node', () => {
+      expect(htmlToMrkdwn('<p>&lt;http://x.com&gt;</p>').text).toEqual('<http://x.com>')
+    })
+
+    it('keeps a mailto link written into a text node', () => {
+      expect(htmlToMrkdwn('<p>&lt;mailto:a@x.com|Mail us&gt;</p>').text).toEqual(
+        '<mailto:a@x.com|Mail us>'
+      )
+    })
   })
 
   /**
@@ -137,6 +153,28 @@ describe('entity escaping', () => {
 
     it('escapes a channel reference without an id', () => {
       expect(htmlToMrkdwn('<p>&lt;#general&gt;</p>').text).toEqual('&lt;#general&gt;')
+    })
+
+    it('escapes a link with a scheme Slack does not link', () => {
+      expect(htmlToMrkdwn('<p>&lt;javascript:alert(1)|x&gt;</p>').text).toEqual(
+        '&lt;javascript:alert(1)|x&gt;'
+      )
+    })
+
+    it('escapes a link-shaped tag without a scheme', () => {
+      expect(htmlToMrkdwn('<p>&lt;x.com|docs&gt;</p>').text).toEqual('&lt;x.com|docs&gt;')
+    })
+
+    it('escapes a link whose url would break out of an href', () => {
+      expect(htmlToMrkdwn('<p>&lt;https://x.com"onmouseover="alert(1)|x&gt;</p>').text).toEqual(
+        '&lt;https://x.com"onmouseover="alert(1)|x&gt;'
+      )
+    })
+
+    it('escapes a link whose url contains whitespace', () => {
+      expect(htmlToMrkdwn('<p>&lt;https://x.com onerror=y&gt;</p>').text).toEqual(
+        '&lt;https://x.com onerror=y&gt;'
+      )
     })
 
     it('escapes the lookalike but keeps a real mention beside it', () => {
@@ -332,6 +370,18 @@ describe('entity escaping', () => {
       expect(htmlToMrkdwn('<p>cc &lt;@U1&gt; <code>&lt;@U2&gt;</code></p>').text).toEqual(
         'cc <@U1> `&lt;@U2&gt;`'
       )
+    })
+
+    it('escapes a link inside a code block', () => {
+      expect(htmlToMrkdwn('<pre><code>&lt;https://x.com|docs&gt;</code></pre>').text).toEqual(
+        '```\n&lt;https://x.com|docs&gt;\n```'
+      )
+    })
+
+    it('keeps a link outside code live while escaping the one inside', () => {
+      expect(
+        htmlToMrkdwn('<p>&lt;https://x.com|a&gt; <code>&lt;https://x.com|b&gt;</code></p>').text
+      ).toEqual('<https://x.com|a> `&lt;https://x.com|b&gt;`')
     })
 
     it('preserves indentation inside a code block', () => {
