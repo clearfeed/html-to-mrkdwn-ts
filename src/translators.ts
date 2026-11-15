@@ -61,10 +61,10 @@ const translators: TranslatorConfigObject = {
       }
     }
   },
-  'p': {
+  p: {
     surroundingNewlines: 1
   },
-  'div': {
+  div: {
     surroundingNewlines: 1
   }
 }

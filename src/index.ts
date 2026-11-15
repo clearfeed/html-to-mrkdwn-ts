@@ -76,8 +76,9 @@ const slackEscapeByCharacter: Record<string, string> = {
 
 /** Code is quoted verbatim, so Slack syntax inside it is text and gets escaped too. */
 const toSlackText = (text: string, inCodeLiteral: boolean): string =>
-  text.replace(inCodeLiteral ? specialCharacter : slackEntityOrSpecialCharacter, (match) =>
-    slackEscapeByCharacter[match] ?? match
+  text.replace(
+    inCodeLiteral ? specialCharacter : slackEntityOrSpecialCharacter,
+    match => slackEscapeByCharacter[match] ?? match
   )
 
 /**
@@ -92,7 +93,7 @@ const reparseEscapeByCharacter: Record<string, string> = {
 }
 
 const encodeForReparse = (text: string): string =>
-  text.replace(/[&<>\u00a0]/g, (character) => reparseEscapeByCharacter[character])
+  text.replace(/[&<>\u00a0]/g, character => reparseEscapeByCharacter[character])
 
 /**
  * The tags node-html-markdown translates with `noEscape`: `pre`, and `code` in every
@@ -155,7 +156,7 @@ const htmlToMrkdwn = (
     normalizeHtmlForSlack(html),
     { ...baseOptions, ...options },
     { ...baseTranslators, ...translators }
-  );
+  )
 
   return {
     text: result,
